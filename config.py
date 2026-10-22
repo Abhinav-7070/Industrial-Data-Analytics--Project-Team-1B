@@ -32,13 +32,13 @@ BASELINES = {
 # its target. Bandwidth ~ 1/(2*pi*tau) -> used for the Nyquist check.
 TAU_S = dict(temp=300.0,     # thermal mass of spindle housing (minutes scale)
              vib=1.0,        # = 1 s RMS window computed by the sensor/edge unit
-             current=0.5,    # drive current responds to load quickly
+             current=0.5,    
              rpm=1.0,        # spindle accelerates / stops in a few seconds
              pressure=2.0)   # hydraulic/pneumatic line
 .
 NOISE_BASE = dict(temp=0.15,     # PT100-class sensor
-                  vib=0.10,      # mm/s RMS
-                  current=0.30,  # A, Hall-effect sensor
+                  vib=0.10,      
+                  current=0.30,  
                   rpm=15.0,      # ~0.5 % of 3000 rpm speed ripple
                   pressure=0.05) # bar
 NOISE_SCALE = {"Running": 1.0, "Idle": 0.5, "Stopped": 0.1,
