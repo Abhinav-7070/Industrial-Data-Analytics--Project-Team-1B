@@ -1,4 +1,4 @@
-SEED = 42                          
+SEED = 42
 START_TIME = "2026-01-05 06:00:00"
 SAMPLING_HZ = 10                   # acquisition rate (OPC UA / MTConnect style polling)
 DT = 1.0 / SAMPLING_HZ             # 0.1 s between samples
@@ -35,7 +35,6 @@ TAU_S = dict(temp=300.0,     # thermal mass of spindle housing (minutes scale)
              current=0.5,    
              rpm=1.0,        # spindle accelerates / stops in a few seconds
              pressure=2.0)   # hydraulic/pneumatic line
-.
 NOISE_BASE = dict(temp=0.15,     # PT100-class sensor
                   vib=0.10,      
                   current=0.30,  

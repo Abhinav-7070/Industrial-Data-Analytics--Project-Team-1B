@@ -1,6 +1,6 @@
 """ME217 Assignment 1, Task 4: per-CNC industrial data analysis.
 
-Run: python task4_analysis.py path/to/manufacturing_data.csv
+Run: python task4_analysis.py cnc_cell_data.csv
 Optional: --interval-minutes 1 --count-mode cumulative --abnormal-column Abnormal_Event
 Uses Python standard library only. Dataset and measurement conventions must be checked.
 """
@@ -11,6 +11,22 @@ from collections import defaultdict
 from datetime import datetime
 from pathlib import Path
 from statistics import mean, stdev
+
+CSV_DIR = Path(__file__).resolve().parent.parent / "csv_files"
+
+
+def csv_path(value):
+    """Resolve paths inside the shared data folder, independent of working directory."""
+    value = Path(value)
+    if not value.is_absolute():
+        if value.parts and value.parts[0] == "csv_files":
+            value = Path(*value.parts[1:])
+        value = CSV_DIR / value
+    value = value.resolve()
+    if not value.is_relative_to(CSV_DIR.resolve()):
+        raise ValueError("Input and output paths must be inside the project's csv_files folder")
+    return value
+
 
 REQUIRED = ['Timestamp','Machine_ID','Machine_Status','Temperature','Vibration','Motor_Current','Cycle_Time','Production_Count','Rejected_Parts']
 RUN = {'running','run','operating'}
@@ -76,7 +92,7 @@ def fmt(v):
 
 
 def analyze(path, interval_minutes, count_mode, abnormal_column):
-    with open(path,newline='',encoding='utf-8-sig') as f:
+    with open(csv_path(path),newline='',encoding='utf-8-sig') as f:
         reader = csv.DictReader(f)
         columns = reader.fieldnames or []
         missing = [c for c in REQUIRED if c not in columns]
@@ -144,7 +160,7 @@ def analyze(path, interval_minutes, count_mode, abnormal_column):
 
 def main():
     p=argparse.ArgumentParser(description='Analyse CNC manufacturing data for Task 4')
-    p.add_argument('csv_file',type=Path)
+    p.add_argument('csv_file',type=Path,nargs='?',default=Path('cnc_cell_data.csv'),help='Input CSV inside csv_files')
     p.add_argument('--interval-minutes',type=float,default=1.0,help='Time represented by each observation; default 1 min')
     p.add_argument('--count-mode',choices=['interval','cumulative'],default='interval')
     p.add_argument('--abnormal-column',default=None,help='Task 5 detection flag column, e.g. Abnormal_Event')
@@ -152,6 +168,8 @@ def main():
     args=p.parse_args()
     if args.interval_minutes <= 0:
         p.error('--interval-minutes must be positive')
+    args.output = csv_path(args.output)
+    args.output.parent.mkdir(parents=True, exist_ok=True)
     metrics=analyze(args.csv_file,args.interval_minutes,args.count_mode,args.abnormal_column)
     with open(args.output,'w',newline='',encoding='utf-8') as f:
         writer=csv.DictWriter(f,fieldnames=list(metrics[0]))

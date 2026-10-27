@@ -1,11 +1,14 @@
+from pathlib import Path
+
 import streamlit as st
 import pandas as pd
 import numpy as np
 import plotly.express as px
+from sklearn.metrics import confusion_matrix
 
-# --- 1. LOAD TASK 1 DATA ---
-# Replace 'task1_data.csv' with the actual name of your file
-df = pd.read_csv("data_with_flags(task5).csv")
+# --- 1. LOAD TASK 5 DATA ---
+CSV_DIR = Path(__file__).resolve().parent.parent / "csv_files"
+df = pd.read_csv(CSV_DIR / "data_with_flags.csv")
 
 # Convert Timestamp column to actual date-time format for the charts
 df["Timestamp"] = pd.to_datetime(df["Timestamp"])
@@ -89,7 +92,7 @@ st.divider()
 st.subheader("Machine Comparisons (Cell Overview)")
 
 # Load the Task 4 CSV directly
-task4_df = pd.read_csv("task4_machine_metrics.csv") # Replace with the actual file name they sent
+task4_df = pd.read_csv(CSV_DIR / "task4_machine_metrics.csv")
 
 col_comp1, col_comp2 = st.columns(2)
 
@@ -106,12 +109,46 @@ with col_comp2:
     st.plotly_chart(fig_rej, use_container_width=True)
 
 # --- 6. ALARM SUMMARY & ABNORMAL PERIODS ---
-st.subheader("🚨 Alarm Summary & Detected Abnormal Periods")
+# --- 7. ALARM SUMMARY & ABNORMAL PERIODS ---
+st.subheader("🚨 Detected Abnormal Periods")
 
-# Filter the dataframe to only show rows where the Z-Score flag is True
-abnormal_data = df[df["Flag_zscore"] == True][["Timestamp", "Machine_ID", "Temperature", "Vibration", "Machine_Status"]]
+# Filter for Z-score anomalies
+abnormal_raw = df[df["Flag_zscore"] == True].copy()
 
-if not abnormal_data.empty:
-    st.dataframe(abnormal_data.sort_values(by="Timestamp", ascending=False).head(10), use_container_width=True)
+if not abnormal_raw.empty:
+    # Group the alarms by the minute
+    abnormal_raw["Minute"] = abnormal_raw["Timestamp"].dt.floor("min")
+    
+    abnormal_summary = abnormal_raw.groupby(["Minute", "Machine_ID"]).agg({
+        "Temperature": "max",
+        "Vibration": "max",
+        "Machine_Status": "last"
+    }).reset_index()
+
+    # 1. SIMPLER VISUAL: A clean Bar Chart (No complex bubble sizes)
+    # 1. THE SWIMLANE VISUAL: Shows exactly when alarms triggered for each machine
+    fig_alarms = px.scatter(
+        abnormal_summary, 
+        x="Minute", 
+        y="Machine_ID", 
+        color="Machine_ID",
+        title="Alarm Timeline: When Did Machines Enter Abnormal States?",
+        labels={"Minute": "Timestamp (Grouped by Minute)", "Machine_ID": "Machine"},
+        color_discrete_sequence=["#FF0000", "#FF8C00"] # Red and Orange alert colors
+    )
+    
+    # Make the markers large "X" symbols so they look like actual system errors
+    fig_alarms.update_traces(marker=dict(size=14, symbol="x"))
+    
+    st.plotly_chart(fig_alarms, use_container_width=True)
+
+    # 2. CLEAN TABLE: Hide the long list inside a dropdown expander
+    with st.expander("📄 View Full Minute-by-Minute Anomaly Log"):
+        st.dataframe(
+            abnormal_summary.sort_values(by="Minute", ascending=False), 
+            use_container_width=True,
+            hide_index=True
+        )
 else:
     st.success("No abnormal conditions detected currently.")
+st.divider()

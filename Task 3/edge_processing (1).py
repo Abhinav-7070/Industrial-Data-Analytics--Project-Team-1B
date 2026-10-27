@@ -12,6 +12,22 @@ from pathlib import Path
 
 import pandas as pd
 
+CSV_DIR = Path(__file__).resolve().parent.parent / "csv_files"
+
+
+def csv_path(value):
+    """Resolve paths inside the shared data folder, independent of working directory."""
+    value = Path(value)
+    if not value.is_absolute():
+        if value.parts and value.parts[0] == "csv_files":
+            value = Path(*value.parts[1:])
+        value = CSV_DIR / value
+    value = value.resolve()
+    if not value.is_relative_to(CSV_DIR.resolve()):
+        raise ValueError("Input and output paths must be inside the project's csv_files folder")
+    return value
+
+
 SAMPLING_HZ = 10
 STARTUP_GRACE_S = 60
 SMOOTH_S = 5
@@ -21,11 +37,11 @@ SENSORS = ["Temperature", "Vibration", "Motor_Current", "Spindle_RPM", "Pressure
 REQUIRED_COLUMNS = {"Timestamp", "Machine_ID", "Machine_Status", *SENSORS}
 
 
-def load_data(csv_path: Path) -> pd.DataFrame:
+def load_data(input_path: Path) -> pd.DataFrame:
 
     # Loading and Preprocessing of data from Task 1
 
-    data = pd.read_csv(csv_path)
+    data = pd.read_csv(csv_path(input_path))
     missing = REQUIRED_COLUMNS - set(data.columns)
     if missing:
         raise ValueError(f"Missing required columns: {', '.join(sorted(missing))}")
@@ -88,16 +104,17 @@ def process_at_edge(data: pd.DataFrame) -> pd.DataFrame:
 
 def main() -> None:
     parser = argparse.ArgumentParser(description="Run status-aware CNC edge processing")
-    parser.add_argument("--input", type=Path, required=True, help="Raw CNC input CSV")
+    parser.add_argument("--input", type=Path, default=Path("cnc_cell_data.csv"), help="Input CSV inside csv_files")
     parser.add_argument(
         "--output",
         type=Path,
-        default=Path(__file__).resolve().parent.parent / "Output",
-        help="Output directory (default: the project's Output folder)",
+        default=CSV_DIR,
+        help="Output directory (default: the project's csv_files folder)",
     )
     args = parser.parse_args()
 
     processed = process_at_edge(load_data(args.input))
+    args.output = csv_path(args.output)
     args.output.mkdir(parents=True, exist_ok=True)
     output_path = args.output / "processed_data.csv"
     processed.to_csv(output_path, index=False)

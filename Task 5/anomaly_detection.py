@@ -1,9 +1,12 @@
+from pathlib import Path
+
 import numpy as np
 import pandas as pd
 from sklearn.ensemble import IsolationForest
 
-DATA_PATH = "output/processed_data.csv"
-OUTPUT_PATH = "data_with_flags.csv"
+CSV_DIR = Path(__file__).resolve().parent.parent / "csv_files"
+DATA_PATH = CSV_DIR / "processed_data.csv"
+OUTPUT_PATH = CSV_DIR / "data_with_flags.csv"
 
 TIMESTAMP_COL, MACHINE_COL, STATUS_COL = "Timestamp", "Machine_ID", "Machine_Status"
 RUNNING_LABEL = "Running"
@@ -14,20 +17,20 @@ HEALTHY_END = "2026-01-05 07:00:00"
 STARTUP_GRACE_S = 60      
 SMOOTH_S = 5              
 RPM_STD_WINDOW_S = 30      
-PERSISTENCE_S = 30         
+PERSISTENCE_S = 25   
 LABEL_RAMP_IGNORE_S = 600  
 
 SENSORS = ["Temperature", "Vibration", "Motor_Current", "Spindle_RPM", "Pressure"]
 FEATURES = SENSORS + ["RPM_Std"]
 UPPER_ONLY = {"Temperature", "Vibration", "Motor_Current", "RPM_Std"}  
 LIMIT_QUANTILE = 0.999    
-LIMIT_MARGIN = 0.25       
+LIMIT_MARGIN = 0.35       
 IFOREST_COLUMNS = ["Temperature", "Vibration", "Motor_Current", "RPM_Std"]
 IFOREST_TREES = 200        
 IFOREST_SEED = 0
-IFOREST_SCORE_SMOOTH_S = 20       
-IFOREST_FALSE_ALARM_RATE = 0.009  
-Z_CUTOFF = 2.25   
+IFOREST_SCORE_SMOOTH_S = 10       
+IFOREST_FALSE_ALARM_RATE = 0.0075 
+Z_CUTOFF = 2.4
 
 def prepare_features(df):
     """Use the features already calculated by Task 3."""

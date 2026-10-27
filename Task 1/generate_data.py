@@ -2,7 +2,7 @@ from pathlib import Path
 import config as cfg
 from generator import generate_all
 
-DATA_DIR = Path(__file__).resolve().parent.parent / "data"
+DATA_DIR = Path(__file__).resolve().parent.parent / "csv_files"
 
 def main():
     DATA_DIR.mkdir(exist_ok=True)
