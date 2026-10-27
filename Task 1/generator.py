@@ -24,8 +24,6 @@ def build_forced_windows(machine_id):
             if a["type"] == "bearing_wear":
                 forced[t] = "Running"
                 severity[t] = (t - start) / (end - start)   # ramps 0 -> 1
-            elif a["type"] == "sudden_fault":
-                forced[t] = "Fault"
     return forced, severity, abnormal
 
 
