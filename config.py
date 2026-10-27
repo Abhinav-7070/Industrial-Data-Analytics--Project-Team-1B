@@ -66,7 +66,7 @@ CYCLE_TIME_NOISE_FRAC = 0.03       # part-to-part cycle jitter = 3 %
 
 ANOMALIES = [
     dict(machine="CNC_03", type="bearing_wear", start_s=3600, end_s=6300),
-    dict(machine="CNC_05", type="sudden_fault", start_s=5000, end_s=5120),
+    dict(machine="CNC_05", type="sudden_fault", start_s=5000, end_s=6500),
 ]
 WEAR_EFFECTS = dict(
     temp_add=15.0,        # deg C at severity 1
